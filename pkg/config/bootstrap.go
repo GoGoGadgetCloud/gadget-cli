@@ -11,13 +11,12 @@ type (
 		S3BucketName *string
 	}
 
-	Config struct {
+	Bootstrap struct {
 		DeploymentConfig
 	}
 )
 
-func SaveConfig(c *Config) error {
-	configPath := "./.gadget/config.yaml"
+func SaveBootstrap(bootstrapPath string, c *Bootstrap) error {
 
 	// Marshal Config struct to YAML
 	data, err := yaml.Marshal(c)
@@ -26,7 +25,7 @@ func SaveConfig(c *Config) error {
 	}
 
 	// Write to file
-	err = os.WriteFile(configPath, data, 0644)
+	err = os.WriteFile(bootstrapPath, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -34,26 +33,25 @@ func SaveConfig(c *Config) error {
 	return nil
 }
 
-func LoadConfig() (*Config, error) {
-	configPath := "./.gadget/config.yaml"
+func LoadBootstrap(bootstrapPath string) (*Bootstrap, error) {
 
 	// Check if file exists
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, nil
+	if _, err := os.Stat(bootstrapPath); os.IsNotExist(err) {
+		return nil, err
 	}
 
 	// Read file
-	data, err := os.ReadFile(configPath)
+	data, err := os.ReadFile(bootstrapPath)
 	if err != nil {
 		return nil, err
 	}
 
 	// Unmarshal YAML to Config struct
-	var config Config
-	err = yaml.Unmarshal(data, &config)
+	var bootstrap Bootstrap
+	err = yaml.Unmarshal(data, &bootstrap)
 	if err != nil {
 		return nil, err
 	}
 
-	return &config, nil
+	return &bootstrap, nil
 }

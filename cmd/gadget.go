@@ -1,32 +1,38 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/stefan79/gadget-cli/cmd/session"
+	"github.com/stefan79/gadget-cli/pkg/commands"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	sesh, err := session.NewSession()
+
+	session := commands.NewSession()
+	workActions := commands.NewWorkContext(session)
+	bootstrapActions, err := commands.NewBootstrapContext(session)
 	if err != nil {
 		panic(err)
 	}
+	deployActions, err := commands.NewDeployContext(session)
+	if err != nil {
+		panic(err)
+	}
+
 	app := &cli.App{
 		Commands: []*cli.Command{
-			{
-				Name:   "deploy",
-				Usage:  "deploy a lambda",
-				Action: sesh.Deploy,
-			},
-			{
-				Name:   "init",
-				Usage:  "initialize a configuration ",
-				Action: sesh.Init,
-			},
+			workActions.CreateCommand(),
+			bootstrapActions.CreateCommand(),
+			deployActions.CreateCommand(),
 		},
 	}
+	for _, cmd := range app.Commands {
+		fmt.Println("Command", cmd.Name)
+	}
+	fmt.Println("App Commands", app.Commands)
 	if err := app.Run(os.Args); err != nil {
-		sesh.HandleError(err)
+		panic(err)
 	}
 }
