@@ -3,6 +3,8 @@ package adapter
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -13,9 +15,11 @@ import (
 
 type (
 	DefaultStagingAdapter struct {
-		StagingArea *string
+		ApplicationName *string
+		StagingArea     *string
 	}
 	StagingAdapter interface {
+		CalculateCheckSum(inputSource *string) (string, error)
 		GetFileFromStaging(base *string) (*string, error)
 		Compile(inputSource *string, outputTarget *string) error
 		GenerateTemplate(inputSource *string, outputTarget *string, handlerName *string, s3Bucket *string, s3Key *string) error
@@ -24,9 +28,10 @@ type (
 	}
 )
 
-func NewStagingAdapter(stagingArea *string) (StagingAdapter, error) {
+func NewStagingAdapter(applicationName *string, stagingArea *string) (StagingAdapter, error) {
 	return &DefaultStagingAdapter{
-		StagingArea: stagingArea,
+		StagingArea:     stagingArea,
+		ApplicationName: applicationName,
 	}, nil
 }
 
@@ -39,6 +44,35 @@ func (a *DefaultStagingAdapter) GetFileFromStaging(fileName *string) (*string, e
 	}
 
 	return &fullPath, nil
+}
+
+func (a *DefaultStagingAdapter) CalculateCheckSum(inputSource *string) (string, error) {
+	targetFile, err := createFullPathReference(*inputSource, *a.StagingArea)
+	if err != nil {
+		return "", err
+	}
+	// Open file
+	file, err := os.Open(targetFile)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Create a new SHA256 hash
+	hash := sha256.New()
+
+	// Copy the file content to the hash
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+
+	// Get the SHA256 checksum
+	checksum := hash.Sum(nil)
+
+	// Convert the checksum to a hexadecimal string
+	checksumStr := hex.EncodeToString(checksum)
+
+	return checksumStr, nil
 }
 
 func (a *DefaultStagingAdapter) Compile(inputSource *string, outputTarget *string) error {
@@ -98,7 +132,14 @@ func (a *DefaultStagingAdapter) GenerateTemplate(inputSource *string, outputTarg
 	if err != nil {
 		return err
 	}
-	err = runCommand(*inputSource, nil, "deployment", "generate", "--template", targetFile, "--s3bucket", *s3bucket, "--s3key", *s3key, "--handler", *handlerName)
+	err = runCommand(*inputSource, nil, "deployment", "generate",
+		"--template", targetFile,
+		"--s3bucket", *s3bucket,
+		"--s3key", *s3key,
+		"--handler", *handlerName,
+		"--application", *a.ApplicationName,
+		"--command", *handlerName,
+	)
 	return err
 }
 

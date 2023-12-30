@@ -16,6 +16,7 @@ type (
 
 	S3Adapter interface {
 		UploadFile(ctx context.Context, localfileName string, bucketName string, bucketKey string) error
+		CreateFile(ctx context.Context, contents string, bucketName string, bucketKey string) error
 	}
 )
 
@@ -29,6 +30,19 @@ func (s *S3SDK) UploadFile(ctx context.Context, localfileName string, bucketName
 		Bucket: &bucketName,
 		Key:    &bucketKey,
 		Body:   bytes.NewReader(data),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateFile implements S3Adapter.
+func (s *S3SDK) CreateFile(ctx context.Context, contents string, bucketName string, bucketKey string) error {
+	_, err := s.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: &bucketName,
+		Key:    &bucketKey,
+		Body:   bytes.NewReader([]byte(contents)),
 	})
 	if err != nil {
 		return err

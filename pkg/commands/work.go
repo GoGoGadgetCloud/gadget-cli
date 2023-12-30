@@ -16,6 +16,7 @@ type (
 	WorkActions interface {
 		Init(cCtx *cli.Context) error
 		Use(cCtx *cli.Context) error
+		SetTag(cCtx *cli.Context) error
 	}
 
 	WorkContext interface {
@@ -28,6 +29,20 @@ func NewWorkContext(session *Session) WorkContext {
 	return &DefaultWorkActions{
 		Session: session,
 	}
+}
+
+func (a *DefaultWorkActions) SetTag(cCtx *cli.Context) error {
+	key := cCtx.String("key")
+	value := cCtx.String("value")
+	conf, err := a.Session.LoadApplicationConfig()
+	if err != nil {
+		return err
+	}
+	err = conf.SetTag(key, value)
+	if err != nil {
+		return err
+	}
+	return a.Session.SaveApplicationConfig(conf)
 }
 
 func (a *DefaultWorkActions) Init(cCtx *cli.Context) error {
@@ -62,7 +77,7 @@ func (a *DefaultWorkActions) Use(cCtx *cli.Context) error {
 func (a *DefaultWorkActions) CreateCommand() *cli.Command {
 	cmd := &cli.Command{
 		Name:  "work",
-		Usage: "configure your go commands to work with gadget",
+		Usage: "Manages your gadget workspace",
 		Subcommands: []*cli.Command{
 			{
 				Name:   "init",
@@ -75,6 +90,24 @@ func (a *DefaultWorkActions) CreateCommand() *cli.Command {
 				Usage:  "use a command in your app",
 				Args:   true,
 				Action: a.Use,
+			},
+			{
+				Name:   "setTag",
+				Usage:  "add a tag to your app",
+				Args:   true,
+				Action: a.SetTag,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "key",
+						Usage:    "key of the tag",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "value",
+						Usage:    "value of the tag",
+						Required: true,
+					},
+				},
 			},
 		},
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/stefan79/gadget-cli/pkg/commands"
@@ -28,10 +27,6 @@ func main() {
 			deployActions.CreateCommand(),
 		},
 	}
-	for _, cmd := range app.Commands {
-		fmt.Println("Command", cmd.Name)
-	}
-	fmt.Println("App Commands", app.Commands)
 	if err := app.Run(os.Args); err != nil {
 		panic(err)
 	}

@@ -11,6 +11,7 @@ type (
 	ApplicationConfig struct {
 		Name     *string
 		Commands []*Command
+		Tags     map[string]string
 	}
 
 	Command struct {
@@ -43,6 +44,15 @@ func (ac *ApplicationConfig) AddCommand(cmd *Command) error {
 	}
 
 	ac.Commands = append(ac.Commands, cmd)
+	return nil
+}
+
+func (ac *ApplicationConfig) SetTag(key string, value string) error {
+	if ac.Tags == nil {
+		ac.Tags = make(map[string]string)
+	}
+
+	ac.Tags[key] = value
 	return nil
 }
 

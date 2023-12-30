@@ -33,7 +33,7 @@ type (
 func (a *DefaultBootstrapActions) CreateCommand() *cli.Command {
 	cmd := &cli.Command{
 		Name:   "bootstrap",
-		Usage:  "initialize a configuration ",
+		Usage:  "Prepares your AWS account to work with gadget",
 		Action: a.Init,
 	}
 	return cmd

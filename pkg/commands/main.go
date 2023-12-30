@@ -1,7 +1,10 @@
 package commands
 
 import (
+	"os"
 	"path/filepath"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/stefan79/gadget-cli/pkg/config"
 	"github.com/urfave/cli/v2"
@@ -12,6 +15,8 @@ type (
 		ApplicationConfigPath *string
 		WorkPath              *string
 		StagingPath           *string
+		StdOut                *log.Logger
+		StdErr                *log.Logger
 	}
 
 	CommandBuilder interface {
@@ -20,13 +25,19 @@ type (
 )
 
 func NewSession() *Session {
+
 	defaultPath := "./gadget.yaml"
 	defaultWorkPath := "./.gadget"
 	defaultStagingPath := "./.gadget/staging"
+	stdErr := log.New(os.Stderr)
+	stdOut := log.New(os.Stdout)
+	stdOut.SetLevel(log.DebugLevel)
 	return &Session{
 		ApplicationConfigPath: &defaultPath,
 		WorkPath:              &defaultWorkPath,
 		StagingPath:           &defaultStagingPath,
+		StdOut:                stdOut,
+		StdErr:                stdErr,
 	}
 }
 
