@@ -123,6 +123,8 @@ func (c *CloudFormationSDK) DeployTemplateAsBytes(ctx context.Context, name stri
 		switch resp.Stacks[0].StackStatus {
 		case types.StackStatusCreateComplete:
 			return nil
+		case types.StackStatusUpdateCompleteCleanupInProgress:
+			time.Sleep(10 * time.Second)
 		case types.StackStatusCreateInProgress:
 			time.Sleep(10 * time.Second)
 		default:
@@ -160,6 +162,8 @@ func (c *CloudFormationSDK) UpdateTemplateAsBytes(ctx context.Context, name stri
 		case types.StackStatusUpdateComplete:
 			return nil
 		case types.StackStatusUpdateInProgress:
+			time.Sleep(10 * time.Second)
+		case types.StackStatusUpdateCompleteCleanupInProgress:
 			time.Sleep(10 * time.Second)
 		default:
 			return fmt.Errorf("update of stack %s failed with status %s", name, resp.Stacks[0].StackStatus)

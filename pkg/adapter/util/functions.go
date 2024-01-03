@@ -71,7 +71,6 @@ func BlackListPredicate(blacklist []string) ValuePredicate {
 }
 
 func GenerateTagApplicator(tags map[string]string) Applicator {
-	fmt.Println("generating tag applicator", tags)
 	return func(resource map[interface{}]interface{}) error {
 		if _, found := resource["Properties"]; found {
 			properties := resource["Properties"].(map[interface{}]interface{})
